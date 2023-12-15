@@ -41,9 +41,9 @@ def write_to_csv(label_links):
 
       # csv header
       if fetch_release_date:
-         header = [ "Artist", "Album", "Link" ]  
+         header = [ "Artist", "Album", "Date", "Link" ]  
       else:
-         header = [ "Artist", "Album", "Date", "Link" ] 
+         header = [ "Artist", "Album", "Link" ] 
       writer.writerow(header)
 
       for label_link in label_links:
