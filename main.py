@@ -4,21 +4,21 @@ import csv
 import time
 import random
 
-# 厂牌的 bandcamp 页面
+# bandcamp labels to scrape
 label_links = [
    "https://sahelsounds.bandcamp.com/music",
    ]  
 
-# 代理服务器的本地监听端口 http / https local listening port 
+# http / https proxy local listening port 
 port = "1087"
-
-# todo
-fetch_release_date = False
 
 proxies = {
    "http": f"127.0.0.1:{port}",
    "https": f"127.0.0.1:{port}",
 }
+
+# todo
+fetch_release_date = False
 
 # def get_album_info(link):
 #    # send a get request
