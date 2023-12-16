@@ -4,7 +4,7 @@ import csv
 import time
 import random
 
-# bandcamp labels to scrape
+# bandcamp label(s) to scrape
 label_links = [
    "https://sahelsounds.bandcamp.com/music",
    ]  
@@ -21,21 +21,6 @@ proxies = {
 # if set to True this script will take longer to complete execution
 # cuz date can only be obtained from album page
 include_release_date = False 
-
-# def get_album_info(link):
-#    # send a get request
-#    response = requests.get(link, proxies = proxies, timeout = 2)
-#    # parse html 
-#    soup = BeautifulSoup(response.text, "html.parser")
-#    # get album data
-#    name_section = soup.find(id = "name-section")
-#    title = name_section.h2.text.strip()
-#    artist = name_section.h3.span.a.text.strip()
-#    info_container = soup.find(id = "trackInfoInner")
-#    year = info_container.find("div", class_="tralbum-credits").find(string=True, recursive=False).strip()
-#    year = year.split("released ")[1]
-#    return [ artist, title, year ]
-
 
 def get_label_page(label_link):
    try: 
