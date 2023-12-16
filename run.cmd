@@ -8,6 +8,7 @@ if not exist ".venv" (
 ) else (
     call .venv\Scripts\activate.bat
 )
+
 py main.py
 echo you may now close this window
 pause
