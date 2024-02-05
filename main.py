@@ -6,11 +6,11 @@ import random
 
 # bandcamp label(s) to scrape
 label_links = [
-   "https://sahelsounds.bandcamp.com/music",
+   "https://realworldrecords.bandcamp.com/music",
    ]  
 
 # http / https proxy local listening port 
-port = "1087"
+port = "7890"
 
 proxies = {
    "http": f"127.0.0.1:{port}",
@@ -20,12 +20,12 @@ proxies = {
 # whether to include release date in result.csv
 # if set to True this script will take longer to complete execution
 # cuz date can only be obtained from album page
-include_release_date = False 
+include_release_date = True 
 
 def get_label_page(label_link):
    try: 
       # send a get request
-      response_label = requests.get(label_link, proxies = proxies, timeout = 2)
+      response_label = requests.get(label_link, proxies = proxies, timeout = 5)
       # return soup
       return BeautifulSoup(response_label.text, "html.parser")
    except requests.exceptions.RequestException as e:
@@ -35,14 +35,19 @@ def get_label_page(label_link):
 def get_release_date(album_link):
    try:
       print(f"getting album info {album_link}")
-      response = requests.get(album_link, proxies = proxies, timeout = 2)
+      response = requests.get(album_link, proxies = proxies, timeout = 5)
       soup = BeautifulSoup(response.text, "html.parser")
 
       if soup:
          info_container = soup.find(id = "trackInfoInner")
          if info_container:
             date = info_container.find("div", class_="tralbum-credits").find(string=True, recursive=False).strip()
-            date = date.split("released ")[1]
+            if "released" in date:
+               date = date.split("released ")[1] 
+            elif "releases" in date:
+               date = date.split("releases ")[1]
+            else:
+               date = ""
             return date
          
       print(f"｡ﾟ･ (>_<) ･ﾟ｡ rlease date not found for {album_link}")
