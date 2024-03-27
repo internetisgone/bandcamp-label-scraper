@@ -7,7 +7,7 @@ currently supports artist name, album title, release date, and album link<br>
 ### set up
 in `main.py`,
 - put label(s) to scrape in `label_links`
-- adjust proxy port and address accordingly
+- adjust proxy settings accordingly
 - set `include_release_date` to `True` to include release date in the result csv
 
 ### run

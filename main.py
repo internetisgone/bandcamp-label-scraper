@@ -1,42 +1,53 @@
-import requests
+from selenium import webdriver
 from bs4 import BeautifulSoup
 import csv
 import time
 import random
+
+####### options #######
 
 # bandcamp label(s) to scrape
 label_links = [
    "https://realworldrecords.bandcamp.com/music",
    ]  
 
-# http / https proxy local listening port 
-port = "7890"
-
-proxies = {
-   "http": f"127.0.0.1:{port}",
-   "https": f"127.0.0.1:{port}",
-}
+# http proxy 
+PROXY = "https://127.0.0.1:7890"
 
 # whether to include release date in result.csv
 # if set to True this script will take longer to complete execution
 # cuz date can only be obtained from album page
-include_release_date = True 
+INCLUDE_RELEASE_DATE = True 
 
-def get_label_page(label_link):
+WAIT_INTERVAL_MIN = 1
+
+WAIT_INTERVAL_MAX = 3
+
+####### selenium web driver #######
+
+options = webdriver.ChromeOptions()
+options.page_load_strategy = "normal"
+options.add_argument("--headless")  
+options.add_argument("--proxy-server = %s" % PROXY)
+
+driver = webdriver.Chrome(options = options)
+
+print(driver.title)
+
+def fetch_page_soup(link):
    try: 
-      # send a get request
-      response_label = requests.get(label_link, proxies = proxies, timeout = 5)
-      # return soup
-      return BeautifulSoup(response_label.text, "html.parser")
-   except requests.exceptions.RequestException as e:
-      print(f"｡ﾟ･ (>_<) ･ﾟ｡ something went wrong with this request {label_link} : {e}")
-      return
+      driver.get(link)
+      driver.implicitly_wait(0.5)
+      page_content = driver.page_source.encode("utf-8") 
 
+      return BeautifulSoup(page_content, "html.parser")
+   except Exception as e:
+      print(f"｡ﾟ･ (>_<) ･ﾟ｡ something went wrong when fetching {link} : {e}")
+   
 def get_release_date(album_link):
    try:
       print(f"getting album info {album_link}")
-      response = requests.get(album_link, proxies = proxies, timeout = 5)
-      soup = BeautifulSoup(response.text, "html.parser")
+      soup = fetch_page_soup(album_link)
 
       if soup:
          info_container = soup.find(id = "trackInfoInner")
@@ -52,21 +63,21 @@ def get_release_date(album_link):
          
       print(f"｡ﾟ･ (>_<) ･ﾟ｡ rlease date not found for {album_link}")
       return ""
-   except requests.exceptions.RequestException as e:
+   except Exception as e:
       print(f"｡ﾟ･ (>_<) ･ﾟ｡ something went wrong with this request {album_link} : {e}")
       return ""
 
-def write_to_csv(label_links):
+def write_to_csv(LABEL_LINKS):
    with open("result.csv", "w", newline = "", encoding = "utf-8") as f: 
       writer = csv.writer(f)
       # csv header
-      if include_release_date:
+      if INCLUDE_RELEASE_DATE:
          header = [ "Artist", "Album", "Date", "Link" ]  
       else:
          header = [ "Artist", "Album", "Link" ] 
       writer.writerow(header)
 
-      for label_link in label_links:
+      for label_link in LABEL_LINKS:
          # clean up label link
          label_link = label_link.split("?")[0]  # remove everything after "?"
          label_link_music = get_label_catalogue_link(label_link)
@@ -82,13 +93,13 @@ def write_to_csv(label_links):
                   album_link = get_label_clean_link(label_link) + album_link
 
                artist = container.a.p.span.text.strip()
-               title = container.a.p.find(text=True, recursive=False).strip()
+               title = container.a.p.find(string = True, recursive = False).strip()
    
-               if include_release_date:
+               if INCLUDE_RELEASE_DATE:
                   # fetch release date from album page
                   date = get_release_date(album_link)
                   # wait a random interval before sending the next album request
-                  interval = random.randint(2, 5) 
+                  interval = random.randint(WAIT_INTERVAL_MIN, WAIT_INTERVAL_MAX) 
                   print(f"sleeping for {interval} seconds... \n")
                   time.sleep(interval)
                   row = [ artist, title, date, album_link ]
@@ -99,7 +110,7 @@ def write_to_csv(label_links):
                writer.writerow(row) 
 
          # get label page content
-         soup = get_label_page(label_link_music)
+         soup = fetch_page_soup(label_link_music)
 
          if soup:
             # parse all albums
@@ -117,9 +128,19 @@ def write_to_csv(label_links):
             print(f"｡ﾟ･ (>_<) ･ﾟ｡ empty response for {label_link_music}")
 
          # wait a random interval before sending the next label request
-         interval = random.randint(2, 5) 
+         interval = random.randint(WAIT_INTERVAL_MIN, WAIT_INTERVAL_MAX) 
          print(f"sleeping for {interval} seconds... \n")
          time.sleep(interval)
+
+      # quit driver when done with all labels 
+      driver.quit()
+
+####### utilities #######
+
+# validate label link & return label name
+def get_label_name(label_link):
+
+   return None
 
 # in case catalogue page is not shown by default
 def get_label_catalogue_link(label_link):
@@ -140,5 +161,5 @@ def get_label_clean_link(label_link):
    else:
       return label_link
 
-if __name__ == '__main__':
-   write_to_csv(label_links)
+if __name__ == "__main__":
+   write_to_csv(LABEL_LINKS)
