@@ -1,14 +1,14 @@
 # bandcamp-label-scraper
-saves a label's catalogue to a csv file<br>
+simple scraper to save a label's catalogue to a csv file<br>
 currently supports artist name, album title, release date, and album link<br>
 
 ## usage
 
 ### set up
 in `main.py`,
-- put label(s) to scrape in `label_links`
-- adjust proxy settings accordingly
-- set `include_release_date` to `True` to include release date in the result csv
+- put label(s) to scrape in `LABEL_LINKS`
+- adjust `PROXY` settings accordingly
+- set `INCLUDE_RELEASE_DATE` to `True` to include release date in the csv (date can only be obtained from album page so execution will take longer if set to `True`)
 
 ### run
 ```

@@ -7,17 +7,15 @@ import random
 ####### options #######
 
 # bandcamp label(s) to scrape
-label_links = [
-   "https://realworldrecords.bandcamp.com/music",
+LABEL_LINKS = [
+   "https://absurdtrax.bandcamp.com/music",
    ]  
 
 # http proxy 
 PROXY = "https://127.0.0.1:7890"
 
-# whether to include release date in result.csv
-# if set to True this script will take longer to complete execution
-# cuz date can only be obtained from album page
-INCLUDE_RELEASE_DATE = True 
+# whether to include release date
+INCLUDE_RELEASE_DATE = False 
 
 WAIT_INTERVAL_MIN = 1
 
@@ -31,8 +29,6 @@ options.add_argument("--headless")
 options.add_argument("--proxy-server = %s" % PROXY)
 
 driver = webdriver.Chrome(options = options)
-
-print(driver.title)
 
 def fetch_page_soup(link):
    try: 
@@ -68,20 +64,27 @@ def get_release_date(album_link):
       return ""
 
 def write_to_csv(LABEL_LINKS):
-   with open("result.csv", "w", newline = "", encoding = "utf-8") as f: 
-      writer = csv.writer(f)
-      # csv header
-      if INCLUDE_RELEASE_DATE:
-         header = [ "Artist", "Album", "Date", "Link" ]  
-      else:
-         header = [ "Artist", "Album", "Link" ] 
-      writer.writerow(header)
+   for label_link in LABEL_LINKS:
+      label_link = label_link.split("?")[0]  # remove everything after "?"
+      label_name = get_label_name(label_link)
+      if label_name == None:
+         print(f"invalid label url: {label_link}")
+         return
+      label_link_music = get_label_catalogue_link(label_link)
 
-      for label_link in LABEL_LINKS:
-         # clean up label link
-         label_link = label_link.split("?")[0]  # remove everything after "?"
-         label_link_music = get_label_catalogue_link(label_link)
+      # get label page content
+      soup = fetch_page_soup(label_link_music)
 
+      # create a csv file
+      with open(f"{label_name}.csv", "w", newline = "", encoding = "utf-8") as f: 
+         writer = csv.writer(f)
+         # header
+         if INCLUDE_RELEASE_DATE:
+            header = [ "Artist", "Album", "Date", "Link" ]  
+         else:
+            header = [ "Artist", "Album", "Link" ] 
+         writer.writerow(header)
+         
          def parse_grid(grid):
             album_containers = grid.find_all("li")
 
@@ -109,9 +112,6 @@ def write_to_csv(LABEL_LINKS):
                print(f"writing new row... {row} \n")
                writer.writerow(row) 
 
-         # get label page content
-         soup = fetch_page_soup(label_link_music)
-
          if soup:
             # parse all albums
             music_grid = soup.find(id = "music-grid")
@@ -127,20 +127,19 @@ def write_to_csv(LABEL_LINKS):
          else:
             print(f"｡ﾟ･ (>_<) ･ﾟ｡ empty response for {label_link_music}")
 
-         # wait a random interval before sending the next label request
-         interval = random.randint(WAIT_INTERVAL_MIN, WAIT_INTERVAL_MAX) 
-         print(f"sleeping for {interval} seconds... \n")
-         time.sleep(interval)
+      # wait a random interval before sending the next label request
+      interval = random.randint(WAIT_INTERVAL_MIN, WAIT_INTERVAL_MAX) 
+      print(f"sleeping for {interval} seconds... \n")
+      time.sleep(interval)
 
-      # quit driver when done with all labels 
-      driver.quit()
+   # quit driver when done with all labels 
+   driver.quit()
 
 ####### utilities #######
 
-# validate label link & return label name
+# get label name from the url
 def get_label_name(label_link):
-
-   return None
+   return label_link.split("https://")[1].split(".bandcamp.com")[0]
 
 # in case catalogue page is not shown by default
 def get_label_catalogue_link(label_link):
